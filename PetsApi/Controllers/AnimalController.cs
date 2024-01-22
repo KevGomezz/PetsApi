@@ -21,7 +21,7 @@ namespace PetsApi.Controllers
             {
                 conexao.Open();
 
-                using (var comando = new NpgsqlCommand("SELECT * FROM pet.tabela_pet", conexao))
+                using (var comando = new NpgsqlCommand("SELECT * FROM pet.tabela_pet WHERE adotado = false", conexao))
                 {
                     var leitor = comando.ExecuteReader();
                     while (leitor.Read())
