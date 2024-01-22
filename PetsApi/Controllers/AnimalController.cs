@@ -168,7 +168,7 @@ namespace PetsApi.Controllers
         }
 
         [HttpPatch("[action]")]
-        public IActionResult AdotarAnimal(int id,bool adotado)
+        public IActionResult AdotarAnimal(int id, bool adotado)
         {
             using (var connection = new NpgsqlConnection(_conString))
             {
@@ -202,7 +202,75 @@ namespace PetsApi.Controllers
                 }
             }
         }
+        [HttpPatch("[action]")]
+        public IActionResult atualizarNome(int id, string nome)
+        {
+            using (var connection = new NpgsqlConnection(_conString))
+            {
+                connection.Open();
 
+                using (var command = new NpgsqlCommand("UPDATE pet.tabela_pet SET nome = @nome WHERE id = @id", connection))
+                {
+                    try
+                    {
+                        command.Parameters.AddWithValue("id", id);
+                        command.Parameters.AddWithValue("nome", nome);
 
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            return Ok("Cadastro modificado com sucesso!");
+
+                        }
+                        else
+                        {
+                            return BadRequest("Nenhuma cadastro encontrado com o ID especificado.");
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+
+                    }
+                }
+            }
+        }
+        [HttpPatch("[action]")]
+        public IActionResult atualizarRaça(int id, string raca)
+        {
+            using (var connection = new NpgsqlConnection(_conString))
+            {
+                connection.Open();
+
+                using (var command = new NpgsqlCommand("UPDATE pet.tabela_pet SET raca = @raca WHERE id = @id", connection))
+                {
+                    try
+                    {
+                        command.Parameters.AddWithValue("id", id);
+                        command.Parameters.AddWithValue("raca", raca);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            return Ok("Cadastro modificado com sucesso!");
+
+                        }
+                        else
+                        {
+                            return BadRequest("Nenhuma cadastro encontrado com o ID especificado.");
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+
+                    }
+                }
+            }
+        }
     }
 }
