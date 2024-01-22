@@ -6,6 +6,6 @@
         public string Nome { get; set; }
         public string Raca { get; set; }
         public bool adotado { get; set; }
-        //public DateTime DataCadastro { get; set; } = DateTime.Now;
+        public DateTime DataCadastro { get; set; } = DateTime.Now;
     }
 }

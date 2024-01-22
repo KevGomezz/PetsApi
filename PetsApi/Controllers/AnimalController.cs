@@ -3,9 +3,10 @@ using PetsApi.Model;
 using System.Data;
 using Npgsql;
 
+
 namespace PetsApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class AnimalController : ControllerBase
     {
@@ -55,7 +56,7 @@ namespace PetsApi.Controllers
                         comando.Parameters.AddWithValue("nome", animal.Nome);
                         comando.Parameters.AddWithValue("raca", animal.Raca);
                         comando.Parameters.AddWithValue("adotado", animal.adotado);
-                       
+
 
                         comando.ExecuteNonQuery();
                     }
@@ -87,10 +88,9 @@ namespace PetsApi.Controllers
                 {
                     conexao.Open();
 
-                    // Correção na consulta SQL
                     using (var comando = new NpgsqlCommand("UPDATE pet.tabela_pet SET nome = @nome, raca = @raca, adotado = @adotado WHERE id = @codigo", conexao))
                     {
-                        comando.Parameters.AddWithValue("codigo", id); // Adicionei o parâmetro para o ID
+                        comando.Parameters.AddWithValue("codigo", id);
                         comando.Parameters.AddWithValue("nome", animal.Nome);
                         comando.Parameters.AddWithValue("raca", animal.Raca);
                         comando.Parameters.AddWithValue("adotado", animal.adotado);
@@ -106,7 +106,7 @@ namespace PetsApi.Controllers
                 return BadRequest(new { erro = true, mensagem = ex.Message });
             }
         }
-       
+
 
         [HttpDelete("{id}")]
         public IActionResult Deletar(int id)
@@ -131,6 +131,78 @@ namespace PetsApi.Controllers
                 return BadRequest(new { erro = true, mensagem = ex.Message });
             }
         }
+        [HttpGet("[action]")]
+        public IActionResult ListarAdotados()
+        {
+            List<Animal> retorno = new List<Animal>();
+
+            try
+            {
+                using (var conexao = new NpgsqlConnection(_conString))
+                {
+                    conexao.Open();
+
+                    using (var comando = new NpgsqlCommand("SELECT * FROM pet.tabela_pet WHERE adotado = true", conexao))
+                    {
+                        var leitor = comando.ExecuteReader();
+                        while (leitor.Read())
+                        {
+                            var animal = new Animal()
+                            {
+                                Id = leitor.GetInt32(0),
+                                Nome = leitor.GetString(1),
+                                Raca = leitor.GetString(2),
+                                adotado = leitor.GetBoolean(3)
+                            };
+                            retorno.Add(animal);
+                        }
+                    }
+                }
+
+                return Ok(retorno);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { erro = true, mensagem = ex.Message });
+            }
+        }
+
+        [HttpPatch("[action]")]
+        public IActionResult AdotarAnimal(int id,bool adotado)
+        {
+            using (var connection = new NpgsqlConnection(_conString))
+            {
+                connection.Open();
+
+                using (var command = new NpgsqlCommand("UPDATE pet.tabela_pet SET adotado = @adotado WHERE id = @id", connection))
+                {
+                    try
+                    {
+                        command.Parameters.AddWithValue("id", id);
+                        command.Parameters.AddWithValue("adotado", adotado);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            return Ok("Cadastro modificado com sucesso!");
+
+                        }
+                        else
+                        {
+                            return BadRequest("Nenhuma cadastro encontrado com o ID especificado.");
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+
+                }
+            }
+        }
+
+
     }
 }
-
