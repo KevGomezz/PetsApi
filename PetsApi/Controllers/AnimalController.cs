@@ -12,7 +12,7 @@ namespace PetsApi.Controllers
     {
         private readonly string _conString = "Host=LocalHost;Username=postgres;Database=Kevin;Port=5432;Password=kevingomes123;SSLMode=Prefer";
 
-        [HttpGet]
+        [HttpGet("Listar-animais")]
         public IActionResult ListarTodos()
         {
             List<Animal> retorno = new List<Animal>();
@@ -41,12 +41,16 @@ namespace PetsApi.Controllers
             return Ok(retorno);
         }
 
-
-        [HttpPost]
+        [HttpPost("Cadastrar-Animal")]
         public IActionResult Inserir([FromBody] Animal animal)
         {
             try
             {
+                if (string.IsNullOrEmpty(animal.Nome) || string.IsNullOrEmpty(animal.Raca))
+                {
+                    return BadRequest("Nome e Raça são campos obrigatórios.");
+                }
+
                 using (var conexao = new NpgsqlConnection(_conString))
                 {
                     conexao.Open();
@@ -56,7 +60,6 @@ namespace PetsApi.Controllers
                         comando.Parameters.AddWithValue("nome", animal.Nome);
                         comando.Parameters.AddWithValue("raca", animal.Raca);
                         comando.Parameters.AddWithValue("adotado", animal.adotado);
-
 
                         comando.ExecuteNonQuery();
                     }
@@ -75,9 +78,11 @@ namespace PetsApi.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { erro = true, mensagem = ex.Message });
+                return StatusCode(500, "Ocorreu um erro ao processar a solicitação.");
             }
         }
+
+
 
         [HttpPut]
         public IActionResult Alterar(int id, [FromBody] Animal animal)
@@ -107,7 +112,6 @@ namespace PetsApi.Controllers
             }
         }
 
-
         [HttpDelete("{id}")]
         public IActionResult Deletar(int id)
         {
@@ -117,6 +121,16 @@ namespace PetsApi.Controllers
                 {
                     conexao.Open();
 
+                    using (var verificarComando = new NpgsqlCommand("SELECT COUNT(*) FROM pet.tabela_pet WHERE id = @id", conexao))
+                    {
+                        verificarComando.Parameters.AddWithValue("id", id);
+                        int count = Convert.ToInt32(verificarComando.ExecuteScalar());
+
+                        if (count == 0)
+                        {
+                            return NotFound(new {aviso = "ID não encontrado. Não foi possível excluir o animal." });
+                        }
+                    }
                     using (var comando = new NpgsqlCommand("DELETE FROM pet.tabela_pet WHERE id = @id", conexao))
                     {
                         comando.Parameters.AddWithValue("id", id);
@@ -131,6 +145,7 @@ namespace PetsApi.Controllers
                 return BadRequest(new { erro = true, mensagem = ex.Message });
             }
         }
+
         [HttpGet("[action]")]
         public IActionResult ListarAdotados()
         {
