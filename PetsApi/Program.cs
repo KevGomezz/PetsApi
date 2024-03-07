@@ -7,7 +7,6 @@ namespace PetsApi
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
-
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -15,7 +14,7 @@ namespace PetsApi
             {
                 options.AddPolicy("AllowSpecificOrigin", builder =>
                 {
-                    builder.WithOrigins("https://localhost:7152")
+                    builder.WithOrigins("https://localhost:7152", "http://localhost:4200")
                            .AllowAnyHeader()
                            .AllowAnyMethod();
                 });
@@ -29,10 +28,9 @@ namespace PetsApi
                 app.UseSwaggerUI();
             }
 
-            app.UseCors("AllowSpecificOrigin");
-
             app.UseHttpsRedirection();
-
+            app.UseRouting();  
+            app.UseCors("AllowSpecificOrigin");  
             app.UseAuthorization();
 
             app.MapControllers();

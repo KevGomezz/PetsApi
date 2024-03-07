@@ -2,6 +2,7 @@
 using PetsApi.Model;
 using System.Data;
 using Npgsql;
+using NpgsqlTypes;
 
 
 namespace PetsApi.Controllers
@@ -84,7 +85,7 @@ namespace PetsApi.Controllers
 
 
 
-        [HttpPut]
+        [HttpPut("{id}")]
         public IActionResult Alterar(int id, [FromBody] Animal animal)
         {
             try
@@ -128,7 +129,7 @@ namespace PetsApi.Controllers
 
                         if (count == 0)
                         {
-                            return NotFound(new {aviso = "ID não encontrado. Não foi possível excluir o animal." });
+                            return NotFound(new { aviso = "ID não encontrado. Não foi possível excluir o animal." });
                         }
                     }
                     using (var comando = new NpgsqlCommand("DELETE FROM pet.tabela_pet WHERE id = @id", conexao))
@@ -138,7 +139,7 @@ namespace PetsApi.Controllers
                     }
                 }
 
-                return Ok("Animal excluído");
+                return Ok(new { Status = 200 });
             }
             catch (Exception ex)
             {
@@ -182,41 +183,7 @@ namespace PetsApi.Controllers
             }
         }
 
-        [HttpPatch("[action]")]
-        public IActionResult AdotarAnimal(int id, bool adotado)
-        {
-            using (var connection = new NpgsqlConnection(_conString))
-            {
-                connection.Open();
 
-                using (var command = new NpgsqlCommand("UPDATE pet.tabela_pet SET adotado = @adotado WHERE id = @id", connection))
-                {
-                    try
-                    {
-                        command.Parameters.AddWithValue("id", id);
-                        command.Parameters.AddWithValue("adotado", adotado);
-
-                        int rowsAffected = command.ExecuteNonQuery();
-
-                        if (rowsAffected > 0)
-                        {
-                            return Ok("Cadastro modificado com sucesso!");
-
-                        }
-                        else
-                        {
-                            return BadRequest("Nenhuma cadastro encontrado com o ID especificado.");
-
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return BadRequest(ex.Message);
-                    }
-
-                }
-            }
-        }
         [HttpPatch("[action]")]
         public IActionResult atualizarNome(int id, string nome)
         {
@@ -287,5 +254,39 @@ namespace PetsApi.Controllers
                 }
             }
         }
+
+        [HttpPatch("{id}")]
+        public IActionResult AdotarAnimal(int id, bool adotado)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_conString))
+                {
+                    connection.Open();
+
+                    using (var command = new NpgsqlCommand("UPDATE pet.tabela_pet SET adotado = @adotado WHERE id = @id", connection))
+                    {
+                        command.Parameters.AddWithValue("id", id);
+                        command.Parameters.AddWithValue("adotado", adotado);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            return Ok(new { Status = 200 });
+                        }
+                        else
+                        {
+                            return BadRequest(new { Status = 404, Message = "Nenhum cadastro encontrado com o ID especificado." });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Status = 500, Message = $"Erro ao adotar animal: {ex.Message}" });
+            }
+        }
     }
 }
+
